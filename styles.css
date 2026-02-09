@@ -28,15 +28,12 @@ html, body {
 }
 
 /* Scale whole UI to fit screen (no cropping) */
-@media (max-width: 1400px) {
-  .game-root {
-    transform: scale(0.9);
-  }
-  
-@media (max-width: 1200px) {
-  .game-root {
-    transform: scale(0.8);
-  }
+@media (max-aspect-ratio: 16/9) {
+  .app { transform: scale(calc(100vw / (var(--canvas-w) * 1px))); }
+}
+@media (min-aspect-ratio: 16/9) {
+  .app { transform: scale(calc(100vh / (var(--canvas-h) * 1px))); }
+}
 
 .stage{
   position: absolute;
