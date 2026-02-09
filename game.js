@@ -135,6 +135,7 @@ function startNewGame(){
     locked: false,
     lastOptions: null,
     finished: false,
+    failed: false,
   };
 
   UI.stageImg.src = ASSETS.neutral;
@@ -184,7 +185,7 @@ function markButtons(selectedOrigIdx){
 }
 
 function onAnswerClick(pos){
-  if(!game || game.locked || game.finished) return;
+  if(!game || game.locked || game.finished || game.failed) return;
   const q = ORDERED_QUESTIONS[game.pos];
   const selectedOrigIdx = game.lastOptions[pos].idx;
   const isCorrect = selectedOrigIdx === q.c;
@@ -207,13 +208,16 @@ function onAnswerClick(pos){
   } else {
     UI.stageImg.src = nextNegative();
     setNextEnabled(false);
-    // restart (reset progress) after short feedback
-    setTimeout(()=>{ startNewGame(); }, 900);
+
+    // stop the game on wrong answer; restart only via "Нова игра"
+    game.failed = true;
+    UI.questionEl.textContent = 'Грешен отговор! Натисни „Нова игра“, за да започнеш отначало.';
+    lockAnswers();
   }
 }
 
 function onNext(){
-  if(!game || game.finished) return;
+  if(!game || game.finished || game.failed) return;
   if(UI.btnNext.classList.contains('is-disabled')) return;
 
   UI.stageImg.src = ASSETS.neutral;
