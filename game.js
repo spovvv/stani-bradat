@@ -243,18 +243,14 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 
 
-// === Fit the whole UI into the current browser viewport (no cropping) ===
+/* === Fit-to-screen scaling (keeps all UI visible) === */
 (function(){
   const BASE_W = 1920;
   const BASE_H = 1080;
-
-  function applyScale(){
-    const viewport = document.getElementById('viewport');
-    if(!viewport) return;
-    const scale = Math.min(window.innerWidth / BASE_W, window.innerHeight / BASE_H);
-    viewport.style.transform = `scale(${scale})`;
+  function setScale(){
+    const s = Math.min(window.innerWidth / BASE_W, window.innerHeight / BASE_H);
+    document.documentElement.style.setProperty('--scale', String(s));
   }
-
-  window.addEventListener('resize', applyScale);
-  document.addEventListener('DOMContentLoaded', applyScale);
+  window.addEventListener('resize', setScale);
+  document.addEventListener('DOMContentLoaded', setScale);
 })();
