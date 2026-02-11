@@ -241,3 +241,20 @@ document.addEventListener('DOMContentLoaded', ()=>{
   bind();
   startNewGame();
 });
+
+
+// === Fit the whole UI into the current browser viewport (no cropping) ===
+(function(){
+  const BASE_W = 1920;
+  const BASE_H = 1080;
+
+  function applyScale(){
+    const viewport = document.getElementById('viewport');
+    if(!viewport) return;
+    const scale = Math.min(window.innerWidth / BASE_W, window.innerHeight / BASE_H);
+    viewport.style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener('resize', applyScale);
+  document.addEventListener('DOMContentLoaded', applyScale);
+})();
