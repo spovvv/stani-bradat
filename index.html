@@ -10,17 +10,15 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="viewport">
+<div id=\"viewport\">
+  <div class="viewport">
     <div id="app" class="app" aria-label="Стани Брадат - игра">
+      <!-- Central fixed stage image (DO NOT SCALE) -->
       <img id="stageImg" class="stage" src="assets/00-Neutral.png" alt="" />
-
-      <button id="btnNewGame" class="pill btn-newgame" type="button" aria-label="Нова Игра">
-        <span class="pill-text">Нова Игра</span>
-      </button>
-
-      <button id="btnNext" class="pill btn-next is-disabled" type="button" aria-label="Напред">
-        <span class="pill-text">Напред</span>
-      </button>
+      
+      <!-- Top controls -->
+      <button id="btnNewGame" class="pill btn-newgame" type="button" aria-label="Нова Игра"><span class="pill-text">Нова Игра</span></button>
+      <button id="btnNext" class="pill btn-next is-disabled" type="button" aria-label="Напред"><span class="pill-text">Напред</span></button>
 
       <div class="side-stats" aria-live="polite">
         <div class="stat">
@@ -32,19 +30,25 @@
           <div id="gradeValue" class="stat-value">—</div>
         </div>
       </div>
+</div>
 
+<!-- Question -->
       <div id="question" class="question" aria-live="polite"></div>
 
+      <!-- Answers -->
       <div class="answers" role="group" aria-label="Отговори">
-        <button class="answer" data-idx="0" type="button"><span class="answer-bg"></span><span class="answer-text" id="ans0"></span></button>
-        <button class="answer" data-idx="1" type="button"><span class="answer-bg"></span><span class="answer-text" id="ans1"></span></button>
-        <button class="answer" data-idx="2" type="button"><span class="answer-bg"></span><span class="answer-text" id="ans2"></span></button>
-        <button class="answer" data-idx="3" type="button"><span class="answer-bg"></span><span class="answer-text" id="ans3"></span></button>
+        <button class="answer" data-idx="0" type="button"><span class="answer-text"></span></button>
+        <button class="answer" data-idx="1" type="button"><span class="answer-text"></span></button>
+        <button class="answer" data-idx="2" type="button"><span class="answer-text"></span></button>
+        <button class="answer" data-idx="3" type="button"><span class="answer-text"></span></button>
       </div>
 
-      <div class="credit">Играта и героите са създадени от Свилен Петров - spovv</div>
-    </div>
+      
+</div>
   </div>
+
   <script src="game.js"></script>
+
+</div>
 </body>
 </html>
