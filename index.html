@@ -1,54 +1,49 @@
 <!doctype html>
 <html lang="bg">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>СТАНИ БРАДАТ</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Стани Брадат</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id=\"viewport\">
-  <div class="viewport">
-    <div id="app" class="app" aria-label="Стани Брадат - игра">
-      <!-- Central fixed stage image (DO NOT SCALE) -->
-      <img id="stageImg" class="stage" src="assets/00-Neutral.png" alt="" />
-      
-      <!-- Top controls -->
-      <button id="btnNewGame" class="pill btn-newgame" type="button" aria-label="Нова Игра"><span class="pill-text">Нова Игра</span></button>
-      <button id="btnNext" class="pill btn-next is-disabled" type="button" aria-label="Напред"><span class="pill-text">Напред</span></button>
+  <main id="gameRoot" aria-label="Стани Брадат">
+    <img id="stageImg" class="stage" src="assets/00-Neutral.png" alt="" draggable="false">
 
-      <div class="side-stats" aria-live="polite">
-        <div class="stat">
-          <div class="stat-label">Познати<br>отговори</div>
-          <div id="knownValue" class="stat-value">0</div>
-        </div>
-        <div id="gradeStat" class="stat">
-          <div class="stat-label">Текуща<br>оценка</div>
-          <div id="gradeValue" class="stat-value">—</div>
-        </div>
-      </div>
-</div>
+    <button id="btnNewGame" class="topButton newGame" type="button">
+      <span>Нова Игра</span>
+    </button>
 
-<!-- Question -->
-      <div id="question" class="question" aria-live="polite"></div>
+    <button id="btnNext" class="topButton next is-disabled" type="button">
+      <span>Напред</span>
+    </button>
 
-      <!-- Answers -->
-      <div class="answers" role="group" aria-label="Отговори">
-        <button class="answer" data-idx="0" type="button"><span class="answer-text"></span></button>
-        <button class="answer" data-idx="1" type="button"><span class="answer-text"></span></button>
-        <button class="answer" data-idx="2" type="button"><span class="answer-text"></span></button>
-        <button class="answer" data-idx="3" type="button"><span class="answer-text"></span></button>
-      </div>
+    <aside class="sideStats" aria-live="polite">
+      <section class="statBox">
+        <div class="statLabel">Познати<br>отговори</div>
+        <div id="knownValue" class="statValue">0</div>
+      </section>
+      <section class="statBox gradeBox">
+        <div class="statLabel">Текуща<br>оценка</div>
+        <div id="gradeValue" class="statValue">—</div>
+      </section>
+    </aside>
 
-      
-</div>
-  </div>
+    <section id="question" class="questionText" aria-live="polite"></section>
+
+    <section class="answers" aria-label="Отговори">
+      <button class="answer" type="button" data-pos="0"><span></span></button>
+      <button class="answer" type="button" data-pos="1"><span></span></button>
+      <button class="answer" type="button" data-pos="2"><span></span></button>
+      <button class="answer" type="button" data-pos="3"><span></span></button>
+    </section>
+
+    <footer class="credit">Играта и героите са създадени от Свилен Петров - spovv</footer>
+  </main>
 
   <script src="game.js"></script>
-
-</div>
 </body>
 </html>

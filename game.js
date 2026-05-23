@@ -1,36 +1,15 @@
-/* Стани Брадат - логика (UI2)
-   Правила:
-   - Въпросите вървят последователно по трудност: Лесни -> Средни -> Много трудни.
-   - Играта свършва, когато познаеш всички 44 въпроса (в този ред).
-   - При грешен отговор: играта започва отначало (прогресът се нулира).
-   - Текуща оценка: 4 при 10 познати, 5 при 20, 6 при 30. Преди това НЕ показваме оценка.
-   - Фонове при верен/грешен отговор се сменят без повторение, докато се изчерпат.
+/* Стани Брадат — clean production layout
+   - Въпросите вървят последователно: лесни -> средни -> много трудни.
+   - При грешен отговор играта спира и чака бутона „Нова игра“.
+   - Играта приключва при 44/44.
+   - Canvas: 1920x1080, скалира се като цяло към браузъра.
 */
 
 const ASSETS = {
   neutral: 'assets/00-Neutral.png',
-  positives: Array.from({length: 10}, (_,i)=>`assets/${String(i+1).padStart(2,'0')}-Positive.png`),
-  negatives: Array.from({length: 5}, (_,i)=>`assets/${String(i+1).padStart(2,'0')}-Negative.png`),
+  positives: Array.from({length:10}, (_,i)=>`assets/${String(i+1).padStart(2,'0')}-Positive.png`),
+  negatives: Array.from({length:5}, (_,i)=>`assets/${String(i+1).padStart(2,'0')}-Negative.png`)
 };
-
-let positivePool = [];
-let negativePool = [];
-
-function shuffle(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){ 
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-function refillPools(){
-  if(positivePool.length===0) positivePool = shuffle(ASSETS.positives);
-  if(negativePool.length===0) negativePool = shuffle(ASSETS.negatives);
-}
-function nextPositive(){ refillPools(); return positivePool.pop(); }
-function nextNegative(){ refillPools(); return negativePool.pop(); }
 
 const QUESTIONS = {
   easy: [
@@ -85,172 +64,178 @@ const QUESTIONS = {
   ]
 };
 
-const ORDERED_QUESTIONS = [...QUESTIONS.easy, ...QUESTIONS.medium, ...QUESTIONS.hard]; // 44
+const ORDERED_QUESTIONS = [...QUESTIONS.easy, ...QUESTIONS.medium, ...QUESTIONS.hard];
 
-const UI = {
-  knownEl: document.getElementById('knownValue'),
-  gradeEl: document.getElementById('gradeValue'),
-  gradeStat: document.getElementById('gradeStat'),
-  questionEl: document.getElementById('question'),
-  stageImg: document.getElementById('stageImg'),
-  answers: Array.from(document.querySelectorAll('.answer')),
-  btnNext: document.getElementById('btnNext'),
-  btnNewGame: document.getElementById('btnNewGame'),
-};
+let positivePool = [];
+let negativePool = [];
+let state = null;
 
-let game = null;
+const UI = {};
 
-function gradeForKnown(known){
-  if(known>=30) return "6";
-  if(known>=20) return "5";
-  if(known>=10) return "4";
-  return "—";
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function refillPools(){
+  if(positivePool.length === 0) positivePool = shuffle(ASSETS.positives);
+  if(negativePool.length === 0) negativePool = shuffle(ASSETS.negatives);
+}
+function nextPositive(){ refillPools(); return positivePool.pop(); }
+function nextNegative(){ refillPools(); return negativePool.pop(); }
+
+function scaleGame(){
+  const root = UI.root || document.getElementById('gameRoot');
+  if(!root) return;
+
+  const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  root.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+function gradeFromKnown(known){
+  if(known >= 30) return '6';
+  if(known >= 20) return '5';
+  if(known >= 10) return '4';
+  return '—';
+}
+
+function updateStats(){
+  UI.knownValue.textContent = String(state.known);
+  UI.gradeValue.textContent = gradeFromKnown(state.known);
 }
 
 function setNextEnabled(enabled){
-  if(enabled){
-    UI.btnNext.classList.remove('is-disabled');
-    UI.btnNext.classList.add('is-active');
-  } else {
-    UI.btnNext.classList.add('is-disabled');
-    UI.btnNext.classList.remove('is-active');
-  }
+  UI.btnNext.classList.toggle('is-disabled', !enabled);
 }
 
-function lockAnswers(){ UI.answers.forEach(btn=>btn.classList.add('is-locked')); }
-function unlockAnswers(){ UI.answers.forEach(btn=>btn.classList.remove('is-locked')); }
+function clearAnswerStates(){
+  UI.answers.forEach(btn => {
+    btn.classList.remove('correct', 'wrong', 'locked');
+    btn.disabled = false;
+  });
+}
 
-function updateStats(){
-  UI.knownEl.textContent = String(game.known);
-  UI.gradeEl.textContent = gradeForKnown(game.known);
+function lockAnswers(){
+  UI.answers.forEach(btn => {
+    btn.classList.add('locked');
+    btn.disabled = true;
+  });
+}
+
+function currentQuestion(){
+  return ORDERED_QUESTIONS[state.index];
+}
+
+function renderQuestion(){
+  const q = currentQuestion();
+
+  UI.question.textContent = q.q;
+
+  const options = shuffle(q.a.map((text, originalIndex) => ({ text, originalIndex })));
+  state.options = options;
+
+  clearAnswerStates();
+  UI.answers.forEach((btn, i) => {
+    btn.querySelector('span').textContent = options[i].text;
+  });
+
+  UI.stageImg.src = ASSETS.neutral;
+  setNextEnabled(false);
+  updateStats();
 }
 
 function startNewGame(){
   positivePool = [];
   negativePool = [];
 
-  game = {
-    pos: 0,
+  state = {
+    index: 0,
     known: 0,
-    locked: false,
-    lastOptions: null,
-    finished: false,
+    options: [],
+    answered: false,
     failed: false,
+    finished: false
   };
 
-  UI.stageImg.src = ASSETS.neutral;
-  setNextEnabled(false);
-  unlockAnswers();
-  game.locked = false;
-  game.finished = false;
-
-  updateStats();
-  render();
+  renderQuestion();
 }
 
-function render(){
-  if(game.finished){
-    UI.questionEl.textContent = 'БРАВО! Позна всички въпроси!';
-    UI.answers.forEach(btn=>{
-      btn.classList.add('is-locked');
-      btn.querySelector('.answer-text').textContent = '';
-    });
-    setNextEnabled(false);
-    updateStats();
-    return;
-  }
-
-  const q = ORDERED_QUESTIONS[game.pos];
-  UI.questionEl.textContent = q.q;
-
-  const opts = q.a.map((t, idx)=>({t, idx}));
-  const shuffled = shuffle(opts);
-  game.lastOptions = shuffled;
-
-  UI.answers.forEach((btn, i)=>{
-    btn.classList.remove('is-correct','is-wrong');
-    btn.querySelector('.answer-text').textContent = shuffled[i].t;
-  });
-
-  updateStats();
-}
-
-function markButtons(selectedOrigIdx){
-  const q = ORDERED_QUESTIONS[game.pos];
-  UI.answers.forEach((btn, pos)=>{
-    const origIdx = game.lastOptions[pos].idx;
-    if(origIdx === q.c) btn.classList.add('is-correct');
-    if(origIdx === selectedOrigIdx && selectedOrigIdx !== q.c) btn.classList.add('is-wrong');
-  });
-}
-
-function onAnswerClick(pos){
-  if(!game || game.locked || game.finished || game.failed) return;
-  const q = ORDERED_QUESTIONS[game.pos];
-  const selectedOrigIdx = game.lastOptions[pos].idx;
-  const isCorrect = selectedOrigIdx === q.c;
-
-  game.locked = true;
+function finishGame(){
+  state.finished = true;
+  UI.question.textContent = 'БРАВО! Позна всички въпроси!';
+  UI.stageImg.src = nextPositive();
   lockAnswers();
-  markButtons(selectedOrigIdx);
+  setNextEnabled(false);
+  updateStats();
+}
+
+function onAnswerClick(position){
+  if(!state || state.answered || state.failed || state.finished) return;
+
+  const q = currentQuestion();
+  const selected = state.options[position];
+  const isCorrect = selected.originalIndex === q.c;
+
+  state.answered = true;
+  lockAnswers();
+
+  UI.answers.forEach((btn, i) => {
+    const option = state.options[i];
+    if(option.originalIndex === q.c) btn.classList.add('correct');
+    if(i === position && !isCorrect) btn.classList.add('wrong');
+  });
 
   if(isCorrect){
-    game.known += 1;
+    state.known++;
     UI.stageImg.src = nextPositive();
     updateStats();
-    setNextEnabled(true);
 
-    if(game.pos >= ORDERED_QUESTIONS.length - 1){
-      game.finished = true;
-      setTimeout(()=>render(), 350);
-      return;
+    if(state.index >= ORDERED_QUESTIONS.length - 1){
+      setTimeout(finishGame, 300);
+    } else {
+      setNextEnabled(true);
     }
   } else {
+    state.failed = true;
     UI.stageImg.src = nextNegative();
+    UI.question.textContent = 'Грешен отговор! Натисни „Нова игра“, за да започнеш отначало.';
     setNextEnabled(false);
-
-    // stop the game on wrong answer; restart only via "Нова игра"
-    game.failed = true;
-    UI.questionEl.textContent = 'Грешен отговор! Натисни „Нова игра“, за да започнеш отначало.';
-    lockAnswers();
   }
 }
 
-function onNext(){
-  if(!game || game.finished || game.failed) return;
+function onNextClick(){
+  if(!state || state.failed || state.finished || !state.answered) return;
   if(UI.btnNext.classList.contains('is-disabled')) return;
 
-  UI.stageImg.src = ASSETS.neutral;
-  setNextEnabled(false);
-  game.locked = false;
-  unlockAnswers();
-
-  game.pos += 1;
-  render();
+  state.index++;
+  state.answered = false;
+  renderQuestion();
 }
 
-function bind(){
-  UI.btnNewGame.addEventListener('click', ()=> startNewGame());
-  UI.btnNext.addEventListener('click', ()=> onNext());
-  UI.answers.forEach((btn, i)=>{
-    btn.addEventListener('click', ()=> onAnswerClick(i));
-  });
-}
+function init(){
+  UI.root = document.getElementById('gameRoot');
+  UI.stageImg = document.getElementById('stageImg');
+  UI.btnNewGame = document.getElementById('btnNewGame');
+  UI.btnNext = document.getElementById('btnNext');
+  UI.knownValue = document.getElementById('knownValue');
+  UI.gradeValue = document.getElementById('gradeValue');
+  UI.question = document.getElementById('question');
+  UI.answers = Array.from(document.querySelectorAll('.answer'));
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  bind();
+  UI.btnNewGame.addEventListener('click', startNewGame);
+  UI.btnNext.addEventListener('click', onNextClick);
+  UI.answers.forEach((btn, i) => btn.addEventListener('click', () => onAnswerClick(i)));
+
+  window.addEventListener('resize', scaleGame);
+  window.addEventListener('orientationchange', scaleGame);
+
+  scaleGame();
   startNewGame();
-});
+}
 
-
-/* === Fit-to-screen scaling (keeps all UI visible) === */
-(function(){
-  const BASE_W = 1920;
-  const BASE_H = 1080;
-  function setScale(){
-    const s = Math.min(window.innerWidth / BASE_W, window.innerHeight / BASE_H);
-    document.documentElement.style.setProperty('--scale', String(s));
-  }
-  window.addEventListener('resize', setScale);
-  document.addEventListener('DOMContentLoaded', setScale);
-})();
+window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('load', scaleGame);
